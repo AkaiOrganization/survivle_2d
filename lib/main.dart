@@ -44,10 +44,8 @@ class GameScaffold extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Игра
           GameWidget(game: MySurvivalGame()),
 
-          // HUD
           Positioned(
             top: 40,
             left: 20,
@@ -72,7 +70,6 @@ class GameScaffold extends StatelessWidget {
             ),
           ),
 
-          // Кнопки
           Positioned(
             bottom: 30,
             left: 20,
