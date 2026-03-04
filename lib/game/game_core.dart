@@ -10,7 +10,7 @@ class MySurvivalGame extends FlameGame {
   @override
   Future<void> onLoad() async {
     world.add(RectangleComponent(
-      size: Vector2(2000, 2000),
+      size: Vector2(3000, 3000),
       paint: Paint()..color = const Color(0xff2d5a27),
     ));
 
@@ -31,8 +31,13 @@ class MySurvivalGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
+    player.move(joystick.relativeDelta, dt);
+
     if (!joystick.delta.isZero()) {
-      player.position.add(joystick.relativeDelta * 500 * dt);
+      player.position.add(joystick.relativeDelta * 100 * dt);
+
+      player.position.x = player.position.x.clamp(0, 3000);
+      player.position.y = player.position.y.clamp(0, 3000);
     }
   }
 }
