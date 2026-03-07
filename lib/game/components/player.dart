@@ -1,13 +1,24 @@
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
+import 'package:flutter/material.dart';
 
 enum PlayerState { down, left, right, up, idle }
 
 class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef {
+  double hp = 100;
+
   Player() : super(size: Vector2.all(64), anchor: Anchor.center);
 
   @override
+  void render(Canvas canvas) {
+    if (animations == null || current == null || animations!.isEmpty) return;
+    super.render(canvas);
+  }
+
+  @override
   Future<void> onLoad() async {
+    animations = {};
+
     final spriteSheet = await gameRef.images.load('player.png');
     final double frameWidth = spriteSheet.width / 4;
     final double frameHeight = spriteSheet.height / 4;
@@ -31,21 +42,25 @@ class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef 
       PlayerState.left:  _buildAnim(1),
       PlayerState.right: _buildAnim(2),
       PlayerState.up:    _buildAnim(3),
-      PlayerState.idle:  _buildAnim(0, amount: 1, loop: false),
+      PlayerState.idle:  _buildAnim(0, amount: 1, loop: true),
     };
 
     current = PlayerState.idle;
     position = Vector2(1500, 1500);
+
+    await super.onLoad();
   }
 
   void move(Vector2 delta, double dt) {
+    if (animations == null || animations!.isEmpty) return;
+
     if (delta.length > 0.1) {
       position.add(delta * 250 * dt);
 
       if (delta.y.abs() > delta.x.abs()) {
         current = delta.y > 0 ? PlayerState.down : PlayerState.up;
       } else {
-        current = delta.x < 0 ? PlayerState.right : PlayerState.left;
+        current = delta.x < 0 ? PlayerState.left : PlayerState.right;
       }
     } else {
       current = PlayerState.idle;

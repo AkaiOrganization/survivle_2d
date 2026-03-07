@@ -10,36 +10,28 @@ class SurvivalHUD extends StatelessWidget {
     return Consumer<GameState>(
       builder: (context, state, _) => Container(
         padding: const EdgeInsets.all(10),
-        color: Colors.black54,
+        // Убираем черный фон, чтобы не мешал пиксельному бару под ним
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _statBar("HP", Colors.red, state.hp),
-            const SizedBox(height: 5),
-            _statBar("Hunger", Colors.orange, state.hunger),
-            const SizedBox(height: 10),
+            // Здесь был код полосок HP и Hunger — мы его убрали,
+            // потому что теперь они рисуются через Flame (HealthBar)
+
+            // Оставляем только ресурсы
+            const SizedBox(height: 40), // Отступ сверху, чтобы текст не наложился на полоску HP
             Text(
               "Stone: ${state.stone}  Iron: ${state.iron}  Gold: ${state.gold}",
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _statBar(String label, Color color, double value) {
-    return Row(
-      children: [
-        SizedBox(width: 50, child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 10))),
-        Container(
-          width: 120,
-          height: 12,
-          decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 1)),
-          child: LinearProgressIndicator(value: value, color: color, backgroundColor: Colors.transparent),
-        ),
-      ],
     );
   }
 }

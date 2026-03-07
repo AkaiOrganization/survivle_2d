@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'components/player.dart';
+import 'components/hp_bar.dart';
 
 class MySurvivalGame extends FlameGame {
   late Player player;
@@ -9,6 +10,7 @@ class MySurvivalGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
+    camera.viewport.add(HealthBar());
     world.add(RectangleComponent(
       size: Vector2(3000, 3000),
       paint: Paint()..color = const Color(0xff2d5a27),
