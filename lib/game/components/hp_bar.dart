@@ -5,7 +5,7 @@ import '../game_core.dart';
 class HealthBar extends SpriteGroupComponent<int> with HasGameRef<MySurvivalGame> {
   HealthBar() : super(
     size: Vector2(200, 100),
-    position: Vector2(5, 0),
+    position: Vector2(5, 1),
     priority: 100,
   );
 
