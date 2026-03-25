@@ -10,16 +10,11 @@ class SurvivalHUD extends StatelessWidget {
     return Consumer<GameState>(
       builder: (context, state, _) => Container(
         padding: const EdgeInsets.all(10),
-        // Убираем черный фон, чтобы не мешал пиксельному бару под ним
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Здесь был код полосок HP и Hunger — мы его убрали,
-            // потому что теперь они рисуются через Flame (HealthBar)
-
-            // Оставляем только ресурсы
-            const SizedBox(height: 40), // Отступ сверху, чтобы текст не наложился на полоску HP
+            const SizedBox(height: 40),
             Text(
               "Stone: ${state.stone}  Iron: ${state.iron}  Gold: ${state.gold}",
               style: const TextStyle(

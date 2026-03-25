@@ -1,13 +1,13 @@
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/events.dart';
+import 'package:flame/sprite.dart';
+import 'package:flame/collisions.dart';
 import 'package:flame/experimental.dart';
-import 'package:flame/sprite.dart'; // Добавлено для работы спрайтов
 import 'package:flutter/material.dart';
 import 'components/player.dart';
 import 'components/world_map.dart';
 
-// ОСНОВНОЙ КЛАСС ИГРЫ
 class MySurvivalGame extends FlameGame with HasCollisionDetection {
   late Player player;
   late JoystickComponent joystick;
@@ -20,30 +20,24 @@ class MySurvivalGame extends FlameGame with HasCollisionDetection {
       height: 450,
     );
 
-    // 1. Карта
-    await world.add(WorldMap()..priority = -1);
+    final worldMap = WorldMap();
+    await world.add(worldMap..priority = -1);
 
-    // 2. Игрок
     player = Player();
-    player.position = Vector2(400, 400);
+    player.position = Vector2(1500, 1500);
     await world.add(player);
 
-    // 3. Джойстик
     joystick = JoystickComponent(
       knob: CircleComponent(radius: 25, paint: Paint()..color = Colors.white.withAlpha(128)),
       background: CircleComponent(radius: 50, paint: Paint()..color = Colors.black.withAlpha(77)),
-      position: Vector2(80, size.y - 100),
+      position: Vector2(80, 350),
       priority: 100,
     );
 
-    // 4. Полоска здоровья (Класс описан ниже)
     final healthBar = HealthBar();
-
-    // Добавляем UI элементы в камеру
     camera.viewport.addAll([joystick, healthBar]);
-
     camera.follow(player);
-    camera.setBounds(Rectangle.fromLTWH(0, 0, 1280, 1280));
+    camera.setBounds(Rectangle.fromLTWH(0, 0, 3000, 3000));
   }
 
   @override
@@ -53,7 +47,6 @@ class MySurvivalGame extends FlameGame with HasCollisionDetection {
   }
 }
 
-// КЛАСС ПОЛОСКИ ЗДОРОВЬЯ (ТЕПЕРЬ ТУТ)
 class HealthBar extends SpriteGroupComponent<int> with HasGameRef<MySurvivalGame> {
   HealthBar() : super(
     size: Vector2(160, 80),
