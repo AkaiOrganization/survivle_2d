@@ -14,12 +14,12 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
 
   @override
   Future<void> onLoad() async {
-    final image = await gameRef.images.load('worldmap.png');
-    final treeImage = await gameRef.images.load('forest_demo_objects.png');
+    final grassImage = await gameRef.images.load('worldmap.png');
+    final objectsImage = await gameRef.images.load('forest_demo_objects.png');
 
-    _terrainBatch = SpriteBatch(image);
     size = Vector2.all(3000);
 
+    _terrainBatch = SpriteBatch(grassImage);
     final double dSize = tileSize * visualScale;
 
     for (double x = 0; x < size.x; x += dSize) {
@@ -32,95 +32,145 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
       }
     }
 
-    _spawnAdvancedObjects(image, treeImage);
-
+    _spawnDetailedDecorations(objectsImage);
     _addBoundaries();
   }
 
-  void _spawnAdvancedObjects(Image image, Image treeImage) {
+  void _spawnDetailedDecorations(Image objectsImage) {
     final double dSize = tileSize * visualScale;
 
-    for (double x = dSize * 3; x < size.x - dSize * 3; x += dSize * 5) {
-      for (double y = dSize * 3; y < size.y - dSize * 3; y += dSize * 5) {
+    for (double x = dSize * 4; x < size.x - dSize * 4; x += dSize * 12) {
+      for (double y = dSize * 4; y < size.y - dSize * 4; y += dSize * 12) {
 
-        if (_random.nextDouble() < 0.3) {
-          double roll = _random.nextDouble();
+        if (_random.nextDouble() < 0.6) {
 
-          Vector2 srcPos;
-          Vector2 srcSize;
-          Vector2 objSize;
-          Image currentImage = image;
-          bool hasCollision = true;
-          bool isCollectible = false;
-          int priority = 2;
+          final allPossibleObjects = [
+            {
+              'name': 'tree',
+              'srcPos': Vector2(0, 0),
+              'srcSize': Vector2(64, 96),
+              'objSize': Vector2(dSize * 2, dSize * 3),
+              'hitSize': Vector2(dSize * 0.8, dSize * 0.4),
+              'prio': 3,
+              'isColl': false,
+              'chance': 0.25
+            },
+            {
+              'name': 'big_stone',
+              'srcPos': Vector2(145, 3),
+              'srcSize': Vector2(31, 29),
+              'objSize': Vector2(dSize * 1.2, dSize * 1.2),
+              'hitSize': Vector2(dSize, dSize * 0.7),
+              'prio': 2,
+              'isColl': false,
+              'chance': 0.2
+            },
+            {
+              'name': 'berries',
+              'srcPos': Vector2(96, 16),
+              'srcSize': Vector2(16, 16),
+              'objSize': Vector2(dSize, dSize * 0.7),
+              'hitSize': Vector2(dSize * 0.7, dSize * 0.6),
+              'prio': 2,
+              'isColl': true,
+              'chance': 0.2
+            },
+            {
+              'name': 'small_stone',
+              'srcPos': Vector2(192, 51),
+              'srcSize': Vector2(14, 12),
+              'objSize': Vector2(dSize * 0.6, dSize * 0.6),
+              'hitSize': Vector2.zero(),
+              'prio': 1,
+              'isColl': false,
+              'chance': 0.4
+            },
+            {
+              'name': 'red_mushrooms',
+              'srcPos': Vector2(192, 96),
+              'srcSize': Vector2(16, 16),
+              'objSize': Vector2(dSize * 0.5, dSize * 0.5),
+              'hitSize': Vector2.zero(),
+              'prio': 1,
+              'isColl': false,
+              'chance': 0.5
+            },
+            {
+              'name': 'yellow_flower',
+              'srcPos': Vector2(256, 16),
+              'srcSize': Vector2(16, 16),
+              'objSize': Vector2(dSize * 0.5, dSize * 0.5),
+              'hitSize': Vector2.zero(),
+              'prio': 1,
+              'isColl': false,
+              'chance': 0.6
+            },
+            {
+              'name': 'purple_flower',
+              'srcPos': Vector2(272, 16),
+              'srcSize': Vector2(16, 16),
+              'objSize': Vector2(dSize * 0.5, dSize * 0.5),
+              'hitSize': Vector2.zero(),
+              'prio': 1,
+              'isColl': false,
+              'chance': 0.6
+            },
+            {
+              'name': 'tall_grass',
+              'srcPos': Vector2(128, 64),
+              'srcSize': Vector2(16, 16),
+              'objSize': Vector2(dSize * 0.6, dSize * 0.6),
+              'hitSize': Vector2.zero(),
+              'prio': 1,
+              'isColl': false,
+              'chance': 0.7
+            },
+          ];
 
-          if (roll < 0.15) { // дерево 1
-            srcPos = Vector2(775, 95);
-            srcSize = Vector2(233, 360);
-            objSize = Vector2(dSize * 1.5, dSize * 2.2);
-            priority = 3;
-          } else if (roll < 0.20) { // дерево 2
-            currentImage = treeImage;
-            srcPos = Vector2(0, 0);
-            srcSize = Vector2(60, 80);
-            objSize = Vector2(dSize * 1.8, dSize * 2.8);
-            priority = 3;
-          } else if (roll < 0.25) { // пруд
-            srcPos = Vector2(1103, 94);
-            srcSize = Vector2(245, 268);
-            objSize = Vector2(dSize * 2.5, dSize * 2.5);
-            priority = 1;
-          } else if (roll < 0.45) { // камень
-            srcPos = Vector2(400, 345);
-            srcSize = Vector2(95, 82);
-            objSize = Vector2(dSize * 0.8, dSize * 0.7);
-          } else if (roll < 0.65) { // ягода
-            srcPos = Vector2(64, 346);
-            srcSize = Vector2(95, 95);
-            objSize = Vector2(dSize, dSize);
-            isCollectible = true;
-          } else if (roll < 0.85) { // красные цветы
-            srcPos = Vector2(285, 130);
-            srcSize = Vector2(50, 50);
-            objSize = Vector2(dSize * 0.6, dSize * 0.6);
-            hasCollision = false;
-            priority = 1;
-          } else { // белые цветы
-            srcPos = Vector2(380, 130);
-            srcSize = Vector2(50, 50);
-            objSize = Vector2(dSize * 0.6, dSize * 0.6);
-            hasCollision = false;
-            priority = 1;
+          for (var item in allPossibleObjects) {
+            if (_random.nextDouble() < (item['chance'] as double)) {
+
+              double offsetX = (_random.nextDouble() - 0.5) * dSize * 10;
+              double offsetY = (_random.nextDouble() - 0.5) * dSize * 10;
+              Vector2 finalPos = Vector2(x + offsetX, y + offsetY);
+
+              if (finalPos.length < 150) continue;
+
+              final sprite = Sprite(objectsImage,
+                  srcPosition: item['srcPos'] as Vector2,
+                  srcSize: item['srcSize'] as Vector2
+              );
+
+              PositionComponent obj;
+              if (item['isColl'] as bool) {
+                obj = CollectibleResource(
+                  sprite: sprite,
+                  position: finalPos,
+                  size: item['objSize'] as Vector2,
+                  resourceType: ResourceType.berries,
+                );
+              } else {
+                obj = SpriteComponent(
+                  sprite: sprite,
+                  position: finalPos,
+                  size: item['objSize'] as Vector2,
+                  priority: item['prio'] as int,
+                );
+              }
+              obj.anchor = Anchor.center;
+
+              Vector2 hSize = item['hitSize'] as Vector2;
+              if (hSize != Vector2.zero()) {
+                obj.add(RectangleHitbox(
+                  size: hSize,
+                  anchor: Anchor.bottomCenter,
+                  position: Vector2((item['objSize'] as Vector2).x / 2, (item['objSize'] as Vector2).y),
+                ));
+              }
+
+              add(obj);
+            }
           }
-
-          double offsetX = (_random.nextDouble() - 0.5) * dSize * 2;
-          double offsetY = (_random.nextDouble() - 0.5) * dSize * 2;
-
-          PositionComponent obj;
-          if (isCollectible) {
-            obj = CollectibleResource(
-              sprite: Sprite(currentImage, srcPosition: srcPos, srcSize: srcSize),
-              position: Vector2(x + offsetX, y + offsetY),
-              size: objSize,
-              resourceType: ResourceType.berries,
-            );
-          } else {
-            obj = SpriteComponent(
-              sprite: Sprite(currentImage, srcPosition: srcPos, srcSize: srcSize),
-              position: Vector2(x + offsetX, y + offsetY),
-              size: objSize,
-              priority: priority,
-            );
-          }
-
-          if (hasCollision) {
-            obj.add(RectangleHitbox(
-              size: objSize * 0.7,
-              anchor: Anchor.center,
-              position: objSize / 2,
-            ));
-          }
-          add(obj);
         }
       }
     }
@@ -147,15 +197,22 @@ enum ResourceType { berries }
 
 class CollectibleResource extends SpriteComponent with CollisionCallbacks, HasGameRef<MySurvivalGame> {
   final ResourceType resourceType;
-  CollectibleResource({required Sprite sprite, required Vector2 position, required Vector2 size, required this.resourceType})
-      : super(sprite: sprite, position: position, size: size, priority: 2);
+
+  CollectibleResource({
+    required Sprite sprite,
+    required Vector2 position,
+    required Vector2 size,
+    required this.resourceType
+  }) : super(sprite: sprite, position: position, size: size, priority: 2);
 
   @override
   void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is Player) {
-      other.heal(15);
-      removeFromParent();
+      if (other.hp < 100) {
+        other.heal(15);
+        removeFromParent();
+      }
     }
   }
 }
