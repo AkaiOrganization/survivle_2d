@@ -71,7 +71,6 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       current = PlayerState.idle;
     }
   }
-
   @override
   void onCollision(Set<Vector2> points, PositionComponent other) {
     super.onCollision(points, other);

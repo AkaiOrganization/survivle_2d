@@ -50,30 +50,40 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
               'srcPos': Vector2(0, 0),
               'srcSize': Vector2(64, 96),
               'objSize': Vector2(dSize * 2, dSize * 3),
-              'hitSize': Vector2(dSize * 0.8, dSize * 0.4),
+              'hitSize': Vector2(dSize * 0.6, dSize * 0.4),
               'prio': 3,
               'isColl': false,
-              'chance': 0.25
+              'chance': 0.5
+            },
+            {
+              'name': 'bush',
+              'srcPos': Vector2(176, 0),
+              'srcSize': Vector2(31, 32),
+              'objSize': Vector2(dSize * 1.2, dSize * 1.2),
+              'hitSize': Vector2(dSize * 0.8, dSize * 0.4),
+              'prio': 2,
+              'isColl': false,
+              'chance': 0.5
             },
             {
               'name': 'big_stone',
               'srcPos': Vector2(145, 3),
               'srcSize': Vector2(31, 29),
               'objSize': Vector2(dSize * 1.2, dSize * 1.2),
-              'hitSize': Vector2(dSize, dSize * 0.7),
+              'hitSize': Vector2(dSize * 0.9, dSize * 0.5),
               'prio': 2,
               'isColl': false,
-              'chance': 0.2
+              'chance': 0.5
             },
             {
               'name': 'berries',
               'srcPos': Vector2(96, 16),
               'srcSize': Vector2(16, 16),
-              'objSize': Vector2(dSize, dSize * 0.7),
-              'hitSize': Vector2(dSize * 0.7, dSize * 0.6),
+              'objSize': Vector2(dSize, dSize * 0.9),
+              'hitSize': Vector2(dSize * 0.7, dSize * 0.5),
               'prio': 2,
               'isColl': true,
-              'chance': 0.2
+              'chance': 0.5
             },
             {
               'name': 'small_stone',
@@ -83,7 +93,7 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
               'hitSize': Vector2.zero(),
               'prio': 1,
               'isColl': false,
-              'chance': 0.4
+              'chance': 0.5
             },
             {
               'name': 'red_mushrooms',
@@ -96,9 +106,19 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
               'chance': 0.5
             },
             {
+              'name': 'red_mushrooms',
+              'srcPos': Vector2(242, 48),
+              'srcSize': Vector2(12, 16),
+              'objSize': Vector2(dSize * 0.5, dSize * 0.6),
+              'hitSize': Vector2.zero(),
+              'prio': 1,
+              'isColl': false,
+              'chance': 0.5
+            },
+            {
               'name': 'yellow_flower',
-              'srcPos': Vector2(256, 16),
-              'srcSize': Vector2(16, 16),
+              'srcPos': Vector2(225, 32),
+              'srcSize': Vector2(14, 16),
               'objSize': Vector2(dSize * 0.5, dSize * 0.5),
               'hitSize': Vector2.zero(),
               'prio': 1,
@@ -107,8 +127,8 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
             },
             {
               'name': 'purple_flower',
-              'srcPos': Vector2(272, 16),
-              'srcSize': Vector2(16, 16),
+              'srcPos': Vector2(241, 32),
+              'srcSize': Vector2(14, 16),
               'objSize': Vector2(dSize * 0.5, dSize * 0.5),
               'hitSize': Vector2.zero(),
               'prio': 1,
@@ -117,18 +137,18 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
             },
             {
               'name': 'tall_grass',
-              'srcPos': Vector2(128, 64),
-              'srcSize': Vector2(16, 16),
+              'srcPos': Vector2(112, 32),
+              'srcSize': Vector2(15, 14),
               'objSize': Vector2(dSize * 0.6, dSize * 0.6),
               'hitSize': Vector2.zero(),
               'prio': 1,
               'isColl': false,
-              'chance': 0.7
+              'chance': 1
             },
           ];
 
           for (var item in allPossibleObjects) {
-            if (_random.nextDouble() < (item['chance'] as double)) {
+            if (_random.nextDouble() < (item['chance'] as num).toDouble()) {
 
               double offsetX = (_random.nextDouble() - 0.5) * dSize * 10;
               double offsetY = (_random.nextDouble() - 0.5) * dSize * 10;
@@ -154,7 +174,7 @@ class WorldMap extends PositionComponent with HasGameRef<MySurvivalGame> {
                   sprite: sprite,
                   position: finalPos,
                   size: item['objSize'] as Vector2,
-                  priority: item['prio'] as int,
+                  priority: (item['prio'] as num).toInt(),
                 );
               }
               obj.anchor = Anchor.center;
