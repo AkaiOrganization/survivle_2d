@@ -12,7 +12,6 @@ class SurvivalHUD extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Передаем 3 аргумента: путь, цвет, значение
             _buildStatBar('assets/images/2hp.png', Colors.redAccent, state.hp),
             const SizedBox(height: 8),
             _buildStatBar('assets/images/Hunger.png', Colors.orangeAccent, state.hunger),
@@ -21,7 +20,6 @@ class SurvivalHUD extends StatelessWidget {
 
             Row(
               children: [
-                // Передаем 3 аргумента: путь, текст, цвет
                 _buildResourceChip('assets/images/stone_item.png', state.stone.toString(), Colors.grey),
                 const SizedBox(width: 10),
                 _buildResourceChip('assets/images/wood_item.png', "0", Colors.brown),
@@ -35,7 +33,6 @@ class SurvivalHUD extends StatelessWidget {
     );
   }
 
-  // ФУНКЦИЯ 1: Принимает ровно 3 аргумента
   Widget _buildStatBar(String imagePath, Color color, double value) {
     return Row(
       children: [
@@ -67,7 +64,6 @@ class SurvivalHUD extends StatelessWidget {
     );
   }
 
-  // ФУНКЦИЯ 2: Принимает ровно 3 аргумента
   Widget _buildResourceChip(String imagePath, String count, Color themeColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
