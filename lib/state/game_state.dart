@@ -1,30 +1,24 @@
 import 'package:flutter/material.dart';
 
 class GameState extends ChangeNotifier {
-  int stone = 10;
-  int iron = 5;
-  int gold = 3;
-
-  double hp = 0.8;
-  double hunger = 0.6;
-
+  double hp = 1.0;
+  double hunger = 1.0;
   int selectedSlot = 0;
-  List<String> inventoryItems = List.generate(5, (index) => "");
+  int stone = 0;
 
   void selectSlot(int index) {
-    if (index >= 0 && index < 5) {
-      selectedSlot = index;
-      notifyListeners();
-    }
+    selectedSlot = index;
+    notifyListeners();
   }
 
   void addStone() {
     stone++;
+    print("Камень собран! Всего: $stone");
     notifyListeners();
   }
 
-  void heal(double amount) {
-    hp = (hp + amount).clamp(0.0, 1.0);
+  void saveGame() {
+    print("Система: Состояние HP ($hp) и камней ($stone) сохранено!");
     notifyListeners();
   }
 }

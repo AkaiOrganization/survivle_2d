@@ -21,6 +21,8 @@ class _GameScaffoldState extends State<GameScaffold> {
   }
 
   void _showPauseMenu(BuildContext context) {
+    final gameState = Provider.of<GameState>(context, listen: false);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -37,11 +39,34 @@ class _GameScaffoldState extends State<GameScaffold> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("ПАУЗА", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'monospace', decoration: TextDecoration.none)),
+                const Text(
+                  "ПАУЗА",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'monospace',
+                    decoration: TextDecoration.none,
+                  ),
+                ),
                 const SizedBox(height: 20),
                 _pauseButton("ПРОДОЛЖИТЬ", Colors.green, () => Navigator.pop(context)),
-                _pauseButton("СОХРАНИТЬ", Colors.blueGrey, () => print("Saved")),
-                _pauseButton("ВЫЙТИ", Colors.redAccent, () {
+
+                const SizedBox(height: 10),
+
+                _pauseButton("СОХРАНИТЬ И ВЫЙТИ", Colors.orange.shade800, () {
+                  gameState.saveGame();
+
+                  print("Мир сохранен. Выход...");
+
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                }),
+
+                const SizedBox(height: 10),
+                const Divider(color: Colors.black45),
+
+                _pauseButton("ВЫЙТИ БЕЗ СОХРАНЕНИЯ", Colors.redAccent, () {
                   Navigator.pop(context);
                   Navigator.pop(context);
                 }),
@@ -57,9 +82,18 @@ class _GameScaffoldState extends State<GameScaffold> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: color, minimumSize: const Size(double.infinity, 45)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          minimumSize: const Size(double.infinity, 50),
+          side: const BorderSide(color: Colors.black26, width: 2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
         onPressed: onTap,
-        child: Text(text, style: const TextStyle(color: Colors.white)),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -104,7 +138,6 @@ class _GameScaffoldState extends State<GameScaffold> {
                             ),
                           ),
                           const SizedBox(height: 8),
-
                           _buildHotbarUI(state),
                         ],
                       ),
@@ -135,7 +168,8 @@ class _GameScaffoldState extends State<GameScaffold> {
             return GestureDetector(
               onTap: () => state.selectSlot(index),
               child: _slotSquare(
-                content: Text("${index + 1}", style: TextStyle(color: isSelected ? Colors.white : Colors.white12, fontWeight: FontWeight.bold)),
+                content: Text("${index + 1}",
+                    style: TextStyle(color: isSelected ? Colors.white : Colors.white12, fontWeight: FontWeight.bold)),
                 isSelected: isSelected,
               ),
             );

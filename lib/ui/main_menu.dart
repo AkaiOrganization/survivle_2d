@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'game_scaffold.dart';
+import 'world_selection.dart';
 
 class MainMenu extends StatelessWidget {
   const MainMenu({super.key});
@@ -49,7 +50,7 @@ class MainMenu extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const GameScaffold()),
+                      MaterialPageRoute(builder: (context) => const WorldSelectionScreen()),
                     );
                   },
                 ),
