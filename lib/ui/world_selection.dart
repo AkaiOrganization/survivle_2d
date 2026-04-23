@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'game_scaffold.dart';
 
 class WorldSelectionScreen extends StatefulWidget {
@@ -9,7 +10,41 @@ class WorldSelectionScreen extends StatefulWidget {
 }
 
 class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
-  List<String> worlds = ["My Survival World", "Test Map"];
+  List<String> worlds = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWorlds();
+  }
+
+  Future<void> _loadWorlds() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      worlds = prefs.getStringList('saved_worlds') ?? [];
+      isLoading = false;
+    });
+  }
+
+  Future<void> _saveWorlds() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('saved_worlds', worlds);
+  }
+
+  void _createNewWorld() async {
+    setState(() {
+      worlds.add("Мир #${worlds.length + 1}");
+    });
+    await _saveWorlds();
+  }
+
+  void _deleteWorld(int index) async {
+    setState(() {
+      worlds.removeAt(index);
+    });
+    await _saveWorlds();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,15 +53,12 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/images/gui/main_bg.jpg',
+              'assets/images/gui/bg_menu.webp',
               fit: BoxFit.cover,
               errorBuilder: (context, e, s) => Container(color: const Color(0xFF1A1A1A)),
             ),
           ),
-
-          Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.5)),
-          ),
+          Positioned.fill(child: Container(color: Colors.black.withOpacity(0.5))),
 
           SafeArea(
             child: Column(
@@ -39,13 +71,16 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'monospace',
-                    shadows: [Shadow(color: Colors.black, offset: Offset(2, 2))],
                   ),
                 ),
 
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator(color: Colors.amber))
+                      : worlds.isEmpty
+                      ? const Center(child: Text("ПУСТО", style: TextStyle(color: Colors.white24)))
+                      : ListView.builder(
+                    padding: const EdgeInsets.all(20),
                     itemCount: worlds.length,
                     itemBuilder: (context, index) => _buildWorldCard(index),
                   ),
@@ -56,6 +91,15 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
               ],
             ),
           ),
+
+          Positioned(
+            top: 10,
+            left: 10,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ],
       ),
     );
@@ -63,92 +107,30 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
 
   Widget _buildWorldCard(int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      height: 110,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/gui/panel_world_card.png',
-              fit: BoxFit.fill,
-              errorBuilder: (context, e, s) => Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF543224),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black, width: 3),
-                ),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              children: [
-                _guiIcon('assets/images/gui/icon_world.png', Icons.map),
-
-                const SizedBox(width: 15),
-
-                Expanded(
-                  child: Text(
-                    worlds[index],
-                    style: const TextStyle(
-                      color: Color(0xFF3A2518),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ),
-
-                _actionButton('assets/images/gui/btn_play.png', Colors.green, () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const GameScaffold()));
-                }),
-
-                const SizedBox(width: 8),
-
-                _actionButton('assets/images/gui/btn_delete.png', Colors.red, () {
-                  setState(() => worlds.removeAt(index));
-                }),
-              ],
-            ),
-          ),
-        ],
+      margin: const EdgeInsets.only(bottom: 15),
+      height: 100,
+      decoration: BoxDecoration(
+        color: const Color(0xFF543224).withOpacity(0.8),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.black, width: 2),
       ),
-    );
-  }
-
-  Widget _buildCreateButton() {
-    return GestureDetector(
-      onTap: () {
-        setState(() => worlds.add("World ${worlds.length + 1}"));
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const GameScaffold()));
-      },
-      child: Container(
-        width: 300,
-        height: 70,
-        child: Stack(
-          alignment: Alignment.center,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        leading: const Icon(Icons.public, color: Colors.green, size: 40),
+        title: Text(
+          worlds[index],
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/images/gui/button_long_wood.png',
-              fit: BoxFit.fill,
-              errorBuilder: (context, e, s) => Container(
-                decoration: BoxDecoration(
-                  color: Colors.green.shade800,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.black, width: 2),
-                ),
-              ),
+            IconButton(
+              icon: const Icon(Icons.play_arrow, color: Colors.green, size: 30),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GameScaffold())),
             ),
-            const Text(
-              "СОЗДАТЬ МИР",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                shadows: [Shadow(color: Colors.black, offset: Offset(1, 1))],
-              ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () => _deleteWorld(index),
             ),
           ],
         ),
@@ -156,29 +138,29 @@ class _WorldSelectionScreenState extends State<WorldSelectionScreen> {
     );
   }
 
-  Widget _actionButton(String path, Color fallback, VoidCallback onTap) {
+  Widget _buildCreateButton() {
     return GestureDetector(
-      onTap: onTap,
-      child: Image.asset(
-        path,
-        width: 48,
-        height: 48,
-        errorBuilder: (context, e, s) => Container(
-          width: 45, height: 45,
-          decoration: BoxDecoration(color: fallback, border: Border.all(color: Colors.black, width: 2)),
-          child: Icon(fallback == Colors.red ? Icons.delete : Icons.play_arrow, color: Colors.white),
+      onTap: _createNewWorld,
+      child: Container(
+        width: 280,
+        height: 60,
+        alignment: Alignment.center,
+        child: Image.asset(
+          'assets/images/create1.png',
+          fit: BoxFit.fill,
+          filterQuality: FilterQuality.none,
+          errorBuilder: (context, error, stackTrace) =>
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.green.shade900,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Text("CREATE", style: TextStyle(color: Colors.white)),
+                ),
+              ),
         ),
       ),
     );
   }
-
-  Widget _guiIcon(String path, IconData fallback) {
-    return Image.asset(
-      path,
-      width: 55,
-      height: 55,
-      errorBuilder: (context, e, s) => Icon(fallback, color: Colors.green, size: 40),
-    );
-  }
 }
- 
