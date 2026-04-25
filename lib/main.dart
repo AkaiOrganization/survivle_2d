@@ -3,27 +3,25 @@ import 'package:flame/game.dart';
 import 'package:provider/provider.dart';
 import 'package:flame_audio/flame_audio.dart';
 
-// Твои модули
+// Импорты модулей
 import 'game/game_core.dart';
 import 'state/game_state.dart';
 import 'ui/hud.dart';
 import 'ui/main_menu.dart';
+import 'ui/time_clock.dart'; // Убедись, что файл существует в lib/ui/
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Инициализируем состояние и загружаем сохранение
   final state = GameState();
   await state.loadGame();
 
-  // 2. Предварительная загрузка аудио
   try {
     await FlameAudio.audioCache.loadAll(['music/Sergio.mp3', 'sfx/click.mp3']);
   } catch (e) {
     debugPrint("Ошибка загрузки аудио: $e");
   }
 
-  // 3. Запуск приложения с уже загруженным состоянием
   runApp(
     ChangeNotifierProvider(
       create: (_) => state,
@@ -59,7 +57,6 @@ class _MainGamePageState extends State<MainGamePage> {
   @override
   void initState() {
     super.initState();
-    // Передаем состояние в игру один раз при запуске
     _game = MySurvivalGame(context.read<GameState>());
   }
 
@@ -68,14 +65,14 @@ class _MainGamePageState extends State<MainGamePage> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1. Движок
+          // 1. Движок игры
           GameWidget(game: _game),
 
-          // 2. Интерфейс (Consumer обновляет экран при изменении данных)
+          // 2. Интерфейс (UI)
           Consumer<GameState>(
             builder: (context, state, child) => Stack(
               children: [
-                // Счетчики ресурсов
+                // Ресурсы
                 Positioned(
                   top: 50, left: 20,
                   child: Container(
@@ -88,23 +85,38 @@ class _MainGamePageState extends State<MainGamePage> {
                   ),
                 ),
 
+                // Индикаторы выживания (HP и Голод)
+                Positioned(
+                  top: 100, left: 20, width: 200,
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(value: state.hp / 100, color: Colors.red, backgroundColor: Colors.grey[800]),
+                      const SizedBox(height: 5),
+                      LinearProgressIndicator(value: state.hunger / 100, color: Colors.orange, backgroundColor: Colors.grey[800]),
+                    ],
+                  ),
+                ),
+
+                // Часы
+                Positioned(
+                  top: 50, right: 100,
+                  child: TimeClockWidget(state: state),
+                ),
+
                 // HUD
                 const Positioned(top: 40, left: 20, child: SurvivalHUD()),
 
-                // Кнопка сбора ресурсов
+                // Кнопка сбора
                 Positioned(
                   bottom: 30, left: 20,
                   child: FloatingActionButton(
                     backgroundColor: Colors.brown,
-                    onPressed: () {
-                      if (state.isSoundEnabled) FlameAudio.play('sfx/click.mp3');
-                      state.addMaterial(ItemType.wood); // Пример: добыча дерева
-                    },
+                    onPressed: () => _game.onAction(ItemType.axe),
                     child: const Icon(Icons.handyman, color: Colors.white),
                   ),
                 ),
 
-                // Кнопка выхода (с сохранением)
+                // Сохранение
                 Positioned(
                   top: 40, right: 20,
                   child: IconButton(
