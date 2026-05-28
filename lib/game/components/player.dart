@@ -2,19 +2,21 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import '../game_core.dart';
+import 'interactable_object.dart';
 
-enum PlayerState { down, left, right, up, idle }
+enum PlayerState { down, left, right, up, idleDown, idleLeft, idleRight, idleUp }
 
 class Player extends SpriteAnimationGroupComponent<PlayerState>
     with CollisionCallbacks, HasGameRef<MySurvivalGame> {
 
-  double hp = 100.0;
-  Vector2 _lastPos = Vector2.zero();
+  final Vector2 _lastSafePosition = Vector2(2500.0, 2500.0);
+  PlayerState _lastDirection = PlayerState.idleDown;
 
   Player() : super(size: Vector2.all(64), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
+    super.onLoad();
     final image = await gameRef.images.load('player.png');
 
     final frameWidth = image.width / 4;
@@ -36,15 +38,18 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       PlayerState.left: _makeAnim(1),
       PlayerState.right: _makeAnim(2),
       PlayerState.up: _makeAnim(3),
-      PlayerState.idle: _makeAnim(0, frames: 1),
+      PlayerState.idleDown: _makeAnim(0, frames: 1),
+      PlayerState.idleLeft: _makeAnim(1, frames: 1),
+      PlayerState.idleRight: _makeAnim(2, frames: 1),
+      PlayerState.idleUp: _makeAnim(3, frames: 1),
     };
 
-    current = PlayerState.idle;
-
+    current = PlayerState.idleDown;
     add(RectangleHitbox(
       size: Vector2(30, 20),
       position: Vector2(17, 40),
     ));
+    _lastSafePosition.setFrom(position);
   }
 
   @override
@@ -53,29 +58,38 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     priority = position.y.toInt();
   }
 
-  void heal(double amount) {
-    hp = (hp + amount).clamp(0, 100);
-  }
-
   void move(Vector2 delta, double dt) {
-    _lastPos = position.clone();
     if (delta.length > 0.1) {
+      _lastSafePosition.setFrom(position);
       position.add(delta * 200 * dt);
 
       if (delta.y.abs() > delta.x.abs()) {
-        current = delta.y > 0 ? PlayerState.down : PlayerState.up;
+        if (delta.y > 0) {
+          current = PlayerState.down;
+          _lastDirection = PlayerState.idleDown;
+        } else {
+          current = PlayerState.up;
+          _lastDirection = PlayerState.idleUp;
+        }
       } else {
-        current = delta.x < 0 ? PlayerState.left : PlayerState.right;
+        if (delta.x < 0) {
+          current = PlayerState.left;
+          _lastDirection = PlayerState.idleLeft;
+        } else {
+          current = PlayerState.right;
+          _lastDirection = PlayerState.idleRight;
+        }
       }
     } else {
-      current = PlayerState.idle;
+      current = _lastDirection;
     }
   }
+
   @override
   void onCollision(Set<Vector2> points, PositionComponent other) {
     super.onCollision(points, other);
-    if (other is! ScreenHitbox) {
-      position = _lastPos;
+    if (other is InteractableObject || other is RectangleHitbox) {
+      position.setFrom(_lastSafePosition);
     }
   }
 }

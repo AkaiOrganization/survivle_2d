@@ -20,7 +20,7 @@ class SurvivalHUD extends StatelessWidget {
 
             Row(
               children: [
-                _buildResourceChip('assets/images/stone_item.png', state.stone.toString(), Colors.grey),
+                _buildResourceChip('assets/images/stone_item.png', state.getResourceCount(ItemType.stone_material).toString(), Colors.grey),
                 const SizedBox(width: 10),
                 _buildResourceChip('assets/images/wood_item.png', "0", Colors.brown),
                 const SizedBox(width: 10),

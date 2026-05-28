@@ -5,20 +5,34 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum ItemType { none, axe, pickaxe, sword, shears, wood, stone_material }
 
 class GameState extends ChangeNotifier {
-  // --- Состояние игры ---
-  double _hp = 100.0;
+  // --- Состояние игры (Баланс переведён на 20 HP) ---
+  double _hp = 20.0;
+  final double _maxHp = 20.0;
+
   double _hunger = 100.0;
+  final double _maxHunger = 100.0;
+
   double _time = 12.0;
-  int _stone = 0;
   int _selectedSlot = 0;
-  bool _isSoundEnabled = true;
+
+  // --- Настройки аудио (Раздельные SFX и Music) ---
+  bool _isMusicEnabled = true;
+  bool _isSfxEnabled = true;
+
+  // --- Внутренние таймеры для точной регенерации и урона ---
+  double _damageTimer = 0.0;
+  double _healTimer = 0.0;
 
   // --- Хотбар и Инвентарь ---
-  Map<int, ItemType> _inventory = {
-    0: ItemType.axe, 1: ItemType.pickaxe, 2: ItemType.sword, 3: ItemType.shears, 4: ItemType.none,
+  final Map<int, ItemType> _inventory = {
+    0: ItemType.axe,
+    1: ItemType.pickaxe,
+    2: ItemType.sword,
+    3: ItemType.shears,
+    4: ItemType.none,
   };
 
-  Map<ItemType, int> _inventoryCount = {
+  final Map<ItemType, int> _inventoryCount = {
     ItemType.wood: 0,
     ItemType.stone_material: 0,
   };
@@ -31,46 +45,87 @@ class GameState extends ChangeNotifier {
 
   // --- Геттеры ---
   double get hp => _hp;
+  double get maxHp => _maxHp;
   double get hunger => _hunger;
+  double get maxHunger => _maxHunger;
   double get time => _time;
-  int get stone => _stone;
   int get selectedSlot => _selectedSlot;
-  bool get isSoundEnabled => _isSoundEnabled;
+
+  bool get isMusicEnabled => _isMusicEnabled;
+  bool get isSfxEnabled => _isSfxEnabled;
 
   // --- ЛОГИКА ВЫЖИВАНИЯ (Game Loop) ---
-
-  // Вставь этот метод в update(double dt) твоего FlameGame
   void updateGameLoop(double dt) {
-    // 1. Движение времени
+    // 1. Движение времени с цикличным сбросом через % 24.0
     _time = (_time + dt * 0.05) % 24.0;
+    if (_time < 0.0 || _time >= 24.0) {
+      _time = 0.0;
+    }
 
-    // 2. Постепенная трата голода (0.5 единицы в секунду)
-    // Ты можешь настроить скорость траты голода здесь
-    _hunger = (_hunger - dt * 0.5).clamp(0.0, 100.0);
+    // 2. Трата голода: 1 единица за каждые 1.5 секунды
+    if (_hunger > 0) {
+      _hunger = (_hunger - dt * (1.0 / 1.5)).clamp(0.0, _maxHunger);
+    }
 
-    // 3. Урон от голода
+    // 3. Урон от голода: -2 HP каждые 2 секунды, если голод на нуле
     if (_hunger <= 0) {
-      _hp = (_hp - dt * 2.0).clamp(0.0, 100.0);
+      _damageTimer += dt;
+      if (_damageTimer >= 2.0) {
+        _hp = (_hp - 2.0).clamp(0.0, _maxHp);
+        _damageTimer = 0.0;
+      }
+    } else {
+      _damageTimer = 0.0;
+    }
+
+    // 4. Регенерация здоровья: +1 HP каждые 3 секунды, если сытость >= 80%
+    if (_hunger >= 80.0 && _hp < _maxHp && _hp > 0) {
+      _healTimer += dt;
+      if (_healTimer >= 3.0) {
+        _hp = (_hp + 1.0).clamp(0.0, _maxHp);
+        _healTimer = 0.0;
+      }
+    } else {
+      _healTimer = 0.0;
     }
 
     notifyListeners();
   }
 
-  // Методы для UI (например, для кнопки "Поесть")
+  // --- Методы для выживания и восстановления ---
   void eat(double amount) {
-    _hunger = (_hunger + amount).clamp(0.0, 100.0);
-    notifyListeners();
+    if (_hp > 0) {
+      _hunger = (_hunger + amount).clamp(0.0, _maxHunger);
+      notifyListeners();
+    }
+  }
+
+  void heal(double amount) {
+    if (_hp > 0) {
+      _hp = (_hp + amount).clamp(0.0, _maxHp);
+      notifyListeners();
+    }
   }
 
   void takeDamage(double amount) {
-    _hp = (_hp - amount).clamp(0.0, 100.0);
+    _hp = (_hp - amount).clamp(0.0, _maxHp);
     notifyListeners();
   }
 
-  // --- Управление ---
+  /// Метод полного сброса параметров при респавне после смерти
+  void resetSurvivalState() {
+    _hp = _maxHp;
+    _hunger = _maxHunger;
+    _damageTimer = 0.0;
+    _healTimer = 0.0;
+    notifyListeners();
+  }
+
+  // --- Управление инвентарем ---
   ItemType getItemInSlot(int index) => _inventory[index] ?? ItemType.none;
   int getResourceCount(ItemType item) => _inventoryCount[item] ?? 0;
 
+  /// ИСПРАВЛЕНО: Добавление материалов теперь увеличивает счетчик именно в твоей карте _inventoryCount
   void addMaterial(ItemType material) {
     _inventoryCount[material] = (_inventoryCount[material] ?? 0) + 1;
     notifyListeners();
@@ -81,9 +136,17 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleSound() {
-    _isSoundEnabled = !_isSoundEnabled;
+  // --- Управление аудио-переключателями ---
+  void toggleMusic() {
+    _isMusicEnabled = !_isMusicEnabled;
     notifyListeners();
+    saveGame();
+  }
+
+  void toggleSfx() {
+    _isSfxEnabled = !_isSfxEnabled;
+    notifyListeners();
+    saveGame();
   }
 
   // --- КРАФТ ---
@@ -105,34 +168,72 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- СОХРАНЕНИЕ ---
+  // --- БЕЗОПАСНОЕ СОХРАНЕНИЕ ---
   Future<void> saveGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    final invCountData = _inventoryCount.map((k, v) => MapEntry(k.name, v));
-    final hotbarData = _inventory.map((k, v) => MapEntry(k.toString(), v.name));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final invCountData = _inventoryCount.map((k, v) => MapEntry(k.name, v));
 
-    Map<String, dynamic> saveData = {
-      'hp': _hp,
-      'hunger': _hunger,
-      'time': _time,
-      'inventoryCount': invCountData,
-      'hotbar': hotbarData,
-    };
+      // Переводим индексы хотбара int в String, так как ключи JSON должны быть строками
+      final hotbarData = _inventory.map((k, v) => MapEntry(k.toString(), v.name));
 
-    await prefs.setString('save_data', jsonEncode(saveData));
+      Map<String, dynamic> saveData = {
+        'hp': _hp,
+        'hunger': _hunger,
+        'time': _time,
+        'isMusicEnabled': _isMusicEnabled,
+        'isSfxEnabled': _isSfxEnabled,
+        'inventoryCount': invCountData,
+        'hotbar': hotbarData,
+      };
+
+      await prefs.setString('save_data', jsonEncode(saveData));
+    } catch (e) {
+      debugPrint("Error saving game data: $e");
+    }
   }
 
+  // --- НАДЕЖНАЯ ЗАГРУЗКА ---
   Future<void> loadGame() async {
     final prefs = await SharedPreferences.getInstance();
     final String? jsonString = prefs.getString('save_data');
+
     if (jsonString != null) {
-      Map<String, dynamic> data = jsonDecode(jsonString);
-      _hp = data['hp'];
-      _hunger = data['hunger'];
-      _time = data['time'];
-      Map<String, dynamic> invMap = data['inventoryCount'];
-      invMap.forEach((k, v) => _inventoryCount[ItemType.values.byName(k)] = v);
-      notifyListeners();
+      try {
+        Map<String, dynamic> data = jsonDecode(jsonString);
+
+        _hp = (data['hp'] ?? _maxHp).toDouble().clamp(0.0, _maxHp);
+        _hunger = (data['hunger'] ?? _maxHunger).toDouble().clamp(0.0, _maxHunger);
+        _time = ((data['time'] ?? 12.0).toDouble()) % 24.0;
+
+        _isMusicEnabled = data['isMusicEnabled'] ?? true;
+        _isSfxEnabled = data['isSfxEnabled'] ?? true;
+
+        // Восстановление ресурсов
+        if (data['inventoryCount'] != null) {
+          Map<String, dynamic> invMap = data['inventoryCount'];
+          invMap.forEach((k, v) {
+            try {
+              _inventoryCount[ItemType.values.byName(k)] = v as int;
+            } catch (_) {}
+          });
+        }
+
+        // Восстановление хотбара
+        if (data['hotbar'] != null) {
+          Map<String, dynamic> hotbarMap = data['hotbar'];
+          hotbarMap.forEach((k, v) {
+            try {
+              int slotIndex = int.parse(k);
+              _inventory[slotIndex] = ItemType.values.byName(v);
+            } catch (_) {}
+          });
+        }
+
+        notifyListeners();
+      } catch (e) {
+        debugPrint("Error parsing game state data inside loadGame(): $e");
+      }
     }
   }
 }
